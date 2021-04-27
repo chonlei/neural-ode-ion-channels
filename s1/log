@@ -1,0 +1,14 @@
+nohup: ignoring input
+/home/chon/neuralode-ap/env/lib/python3.7/site-packages/torch/cuda/__init__.py:52: UserWarning: CUDA initialization: Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx (Triggered internally at  /pytorch/c10/cuda/CUDAFunctions.cpp:100.)
+  return torch._C._cuda_getDeviceCount() > 0
+Iter 0
+Iter 400
+Iter 800
+Iter 1200
+Iter 1600
+Iter 2000
+Iter 2400
+Iter 2800
+Iter 3200
+Iter 3600
+Pretraining | Total Loss 0.018039

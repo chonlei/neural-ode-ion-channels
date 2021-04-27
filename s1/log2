@@ -1,0 +1,32 @@
+nohup: ignoring input
+/home/chon/neuralode-ap/env/lib/python3.7/site-packages/torch/cuda/__init__.py:52: UserWarning: CUDA initialization: Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx (Triggered internally at  /pytorch/c10/cuda/CUDAFunctions.cpp:100.)
+  return torch._C._cuda_getDeviceCount() > 0
+AP 2Hz prediction | Total Loss 0.018039
+APs prediction | Total Loss 0.018053
+Sinewave prediction | Total Loss 0.029066
+Staircase prediction | Total Loss 0.218293
+Activation prediction:
+    -60.0mV | Total Loss 0.024931
+    -40.0mV | Total Loss 0.030920
+    -20.0mV | Total Loss 0.084156
+    0.0mV | Total Loss 0.033145
+    20.0mV | Total Loss 0.057890
+    40.0mV | Total Loss 0.033360
+    60.0mV | Total Loss 0.046067
+Deactivation prediction:
+    -120.0mV | Total Loss 0.017956
+    -110.0mV | Total Loss 0.023567
+    -100.0mV | Total Loss 0.011322
+    -90.0mV | Total Loss 0.014902
+    -80.0mV | Total Loss 0.014713
+    -70.0mV | Total Loss 0.015630
+    -60.0mV | Total Loss 0.029707
+    -50.0mV | Total Loss 0.037441
+    -40.0mV | Total Loss 0.051834
+Activation time constant at 40mV prediction:
+    3.0ms | Total Loss 0.014351
+    10.0ms | Total Loss 0.015115
+    30.0ms | Total Loss 0.014259
+    100.0ms | Total Loss 0.011380
+    300.0ms | Total Loss 0.011329
+    1000.0ms | Total Loss 0.029237
