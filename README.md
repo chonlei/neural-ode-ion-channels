@@ -7,10 +7,12 @@ Requirements
 ------
 
 To run the code within this repository requires
+
 - Python 3.5+
 - torchdiffeq
 - pints
 - seaborn
+
 which can be installed via
 ```
 $ pip install -r requirements.txt
