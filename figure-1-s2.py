@@ -62,7 +62,7 @@ makedirs('figure-1-s2')
 #
 # Load data
 #
-raw_data1 = np.loadtxt('../data/cell-5.csv', delimiter=',', skiprows=1)
+raw_data1 = np.loadtxt('data/cell-5.csv', delimiter=',', skiprows=1)
 time1 = raw_data1[:, 0]
 time1_torch = torch.from_numpy(raw_data1[:, 0]).to(device)
 #current1 = raw_data1[:, 1]
@@ -189,7 +189,7 @@ true_model = GroundTruth_a().to(device)
 func_o = Lambda().to(device)
 func_o.eval()
 
-prediction3 = np.loadtxt('../data/ap-cell-5.csv', delimiter=',', skiprows=1)
+prediction3 = np.loadtxt('data/ap-cell-5.csv', delimiter=',', skiprows=1)
 timep3 = prediction3[:, 0]
 timep3_torch = torch.from_numpy(prediction3[:, 0]).to(device)
 #currentp3 = prediction3[:, 1]
