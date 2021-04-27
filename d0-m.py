@@ -46,8 +46,8 @@ prediction_protocol[:, 0] *= 1e3  # s -> ms
 prediction_t = torch.linspace(0., 3000, 1501).to(device)
 
 
-raw_data1 = np.loadtxt('../data/pr3-steady-activation-cell-5.csv', delimiter=',', skiprows=1)
-raw_data2 = np.loadtxt('../data/pr5-deactivation-cell-5.csv', delimiter=',', skiprows=1)
+raw_data1 = np.loadtxt('data/pr3-steady-activation-cell-5.csv', delimiter=',', skiprows=1)
+raw_data2 = np.loadtxt('data/pr5-deactivation-cell-5.csv', delimiter=',', skiprows=1)
 time1 = raw_data1[:, 0]
 time1_torch = torch.from_numpy(raw_data1[:, 0]).to(device)
 voltage1 = raw_data1[:, 2]
