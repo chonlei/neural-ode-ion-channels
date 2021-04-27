@@ -53,3 +53,16 @@ To re-run and create the main figures, use:
 - Figure 7: [`figure-6.py`](./figure-6.py).
 
 These generate figures in directories `figure-1`, `figure-2`, etc.
+
+
+Supplementary figures
+------
+
+To re-run and create the supplementary figures, use:
+- Figure S2: [`figure-2-s.py`](./figure-2-s.py)
+- Figure S3: [`figure-3-s.py`](./figure-3-s.py)
+- Figure S4: [`figure-4-s.py`](./figure-4-s.py)
+- Figure S5: [`figure-1-s2.py`](./figure-1-s2.py)
+- Figure S6: [`figure-1-s1.py`](./figure-1-s1.py)
+
+These generate figures in directories `figure-2-s`, `figure-3-s`, etc.
