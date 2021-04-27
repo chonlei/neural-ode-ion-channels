@@ -24,10 +24,21 @@ Train the models
 
 The following codes re-run the training for the models.
 
-##### Synthetic data studies (no discrepancy)
+#### Synthetic data studies (no discrepancy)
 
 - NN-f: [`s1.py`](./s1.py)
 - NN-d: [`s2.py`](./s2.py)
+
+#### Synthetic data studies (with discrepancy)
+
+- candidate model: [`d0-m.py`](./d0-m.py)
+- NN-f: [`d1.py`](./d1.py)
+- NN-d: [`d2.py`](./d2.py)
+
+#### Experimental data
+
+- NN-f: [`r1.py`](./r1.py)
+- NN-d: [`r2.py`](./r2.py)
 
 
 Main figures
