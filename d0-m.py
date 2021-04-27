@@ -41,7 +41,7 @@ p0 = np.array([
 ])
 
 
-prediction_protocol = np.loadtxt('../hERG/protocol/ap2hz.csv', skiprows=1, delimiter=',')
+prediction_protocol = np.loadtxt('test-protocols/ap2hz.csv', skiprows=1, delimiter=',')
 prediction_protocol[:, 0] *= 1e3  # s -> ms
 prediction_t = torch.linspace(0., 3000, 1501).to(device)
 

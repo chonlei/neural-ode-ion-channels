@@ -43,7 +43,7 @@ noise_sigma = 0.1
 
 use_pt3 = False
 
-prediction_protocol = np.loadtxt('../hERG/protocol/ap2hz.csv', skiprows=1, delimiter=',')
+prediction_protocol = np.loadtxt('test-protocols/ap2hz.csv', skiprows=1, delimiter=',')
 prediction_protocol[:, 0] *= 1e3  # s -> ms
 #
 t1 = torch.linspace(0., 8000, 80001).to(device)
@@ -279,15 +279,15 @@ if args.pred:
     #func = torch.load('d1/model-entire.pt').to(device)
     func.eval()
 
-    prediction_protocol2 = np.loadtxt('../hERG/protocol/staircase.csv', skiprows=1, delimiter=',')
+    prediction_protocol2 = np.loadtxt('test-protocols/staircase.csv', skiprows=1, delimiter=',')
     prediction_protocol2[:, 0] *= 1e3  # s -> ms
     prediction_t2 = torch.linspace(0., 15000, 7501).to(device)
 
-    prediction_protocol3 = np.loadtxt('../hERG/protocol/sinewave.csv', skiprows=1, delimiter=',')
+    prediction_protocol3 = np.loadtxt('test-protocols/sinewave.csv', skiprows=1, delimiter=',')
     prediction_protocol3[:, 0] *= 1e3  # s -> ms
     prediction_t3 = torch.linspace(0., 8000, 4001).to(device)
 
-    prediction_protocol4 = np.loadtxt('../hERG/protocol/aps.csv', skiprows=1, delimiter=',')
+    prediction_protocol4 = np.loadtxt('test-protocols/aps.csv', skiprows=1, delimiter=',')
     prediction_protocol4[:, 0] *= 1e3  # s -> ms
     prediction_t4 = torch.linspace(0., 8000, 4001).to(device)
 
