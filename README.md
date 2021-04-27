@@ -19,15 +19,26 @@ $ pip install -r requirements.txt
 ```
 
 
+Train the models
+------
+
+The following codes re-run the training for the models.
+
+##### Synthetic data studies (no discrepancy)
+
+- NN-f: [`s1.py`](./s1.py)
+- NN-d: [`s2.py`](./s2.py)
+
+
 Main figures
 ------
 
 To re-run and create the main figures, use:
-- Figure 2: [`figure-1.py`](figure-1.py)
-- Figure 3: [`figure-2.py`](figure-2.py)
-- Figure 4: [`figure-3.py`](figure-3.py)
-- Figure 5: [`figure-4.py`](figure-4.py)
-- Figure 6: [`figure-5.py`](figure-5.py)
-- Figure 7: [`figure-6.py`](figure-6.py).
+- Figure 2: [`figure-1.py`](./figure-1.py)
+- Figure 3: [`figure-2.py`](./figure-2.py)
+- Figure 4: [`figure-3.py`](./figure-3.py)
+- Figure 5: [`figure-4.py`](./figure-4.py)
+- Figure 6: [`figure-5.py`](./figure-5.py)
+- Figure 7: [`figure-6.py`](./figure-6.py).
 
 These generate figures in directories `figure-1`, `figure-2`, etc.
