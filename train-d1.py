@@ -653,7 +653,7 @@ else:
         for t_f in t_split:
             idx = np.where((t1 >= t_i) & (t1 < t_f))[0]
             tfit = t1.cpu().numpy()[idx]
-            ifit = smooth(ii[idx], 61)[30:-30]  # smoothing with 151/10ms
+            ifit = smooth(ii[idx], 61)[30:-30]  # smoothing
             spl = UnivariateSpline(tfit, ifit, k=3)
             spl.set_smoothing_factor(0)
             io = np.append(io, spl(tfit))
@@ -673,7 +673,7 @@ else:
         for t_f in t_split:
             idx = np.where((t2 >= t_i) & (t2 < t_f))[0]
             tfit = t2.cpu().numpy()[idx]
-            ifit = smooth(ii[idx], 61)[30:-30]  # smoothing with 151/10ms
+            ifit = smooth(ii[idx], 61)[30:-30]  # smoothing
             spl = UnivariateSpline(tfit, ifit, k=3)
             spl.set_smoothing_factor(0)
             io = np.append(io, spl(tfit))
@@ -696,7 +696,7 @@ else:
             for t_f in t_split:
                 idx = np.where((t3 >= t_i) & (t3 < t_f))[0]
                 tfit = t3.cpu().numpy()[idx]
-                ifit = smooth(ii[idx], 61)[30:-30]  # smoothing with 151/10ms
+                ifit = smooth(ii[idx], 61)[30:-30]  # smoothing
                 spl = UnivariateSpline(tfit, ifit, k=3)
                 spl.set_smoothing_factor(0)
                 io = np.append(io, spl(tfit))
