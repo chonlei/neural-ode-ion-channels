@@ -19,8 +19,6 @@ from torch.optim.lr_scheduler import StepLR
 
 parser = argparse.ArgumentParser('IKr simple syn. fit with NN-f.')
 parser.add_argument('--method', type=str, choices=['dopri5', 'adams'], default='dopri5')
-parser.add_argument('--niters', type=int, default=4000)
-parser.add_argument('--test_freq', type=int, default=20)
 parser.add_argument('--gpu', type=int, default=0)
 parser.add_argument('--adjoint', action='store_true')
 parser.add_argument('--debug', action='store_true')
@@ -209,14 +207,7 @@ class ODEFunc(nn.Module):
         self.vrange = torch.tensor([100.]).to(device)
         self.netscale = torch.tensor([1000.]).to(device)
 
-        #self.p5 = torch.tensor([9.61e-2]).to(device)
-        #self.p6 = torch.tensor([2.36e-2]).to(device)
-        #self.p7 = torch.tensor([7.85e-3]).to(device)
-        #self.p8 = torch.tensor([3.06e-2]).to(device)
-        #self.p5 = 9.62243079990877703e+01 * 1e-3
-        #self.p6 = 2.26404683824047979e+01 * 1e-3
-        #self.p7 = 8.00924780462999131e+00 * 1e-3
-        #self.p8 = 2.43749808069009823e+01 * 1e-3
+        # https://github.com/CardiacModelling/hERGRapidCharacterisation/blob/master/room-temperature-only/out/herg25oc1/herg25oc1-staircaseramp-B06-solution-542811797.txt
         self.p5 = 8.47769667061995875e+01 * 1e-3
         self.p6 = 2.04001345352499328e+01 * 1e-3
         self.p7 = 1.02860743916105211e+01 * 1e-3
@@ -231,8 +222,6 @@ class ODEFunc(nn.Module):
         self.__v = interp1d(t, v)
 
     def _v(self, t):
-        #return torch.from_numpy(np.interp([t.cpu().detach().numpy()], self._t_regular,
-        #                                  self._v_regular))
         return torch.from_numpy(self.__v([t.cpu().detach().numpy()]))
 
     def voltage(self, t):
@@ -272,7 +261,6 @@ if args.pred:
 
     func = ODEFunc().to(device)
     func.load_state_dict(torch.load('s1/model-state-dict.pt'))
-    #func = torch.load('s1/model-entire.pt').to(device)
     func.eval()
 
     prediction_protocol2 = np.loadtxt('test-protocols/staircase.csv', skiprows=1, delimiter=',')
@@ -291,11 +279,6 @@ if args.pred:
     v_batches = torch.load('s1/v.pt')[::21]
     a_batches = torch.load('s1/a.pt')[::21]
     dadt_batches = torch.load('s1/dadt.pt')[::21]
-
-    #plt.plot(a_batches.reshape(-1).numpy())
-    #plt.plot(dadt_batches.reshape(-1).numpy())
-    #plt.show()
-    #plt.close()
 
     x1 = torch.reshape(torch.linspace(-130, 70, 50).to(device), (-1, 1))
     xx1 = x1 / func.vrange
@@ -443,7 +426,7 @@ if args.pred:
         plt.close(fig1)
 
         #
-        # Pr 3 Activation (fit two time constants?!)
+        # Pr 3 Activation
         #
         t = torch.linspace(0., 8000., 8001).to(device)  # 8 seconds, 1 ms interval
         template_v = np.zeros(t.cpu().numpy().shape)
@@ -587,37 +570,6 @@ with torch.no_grad():
             true_y_batches1.append(true_y)
             true_yo_batches1.append(true_y[:, 0, 0] * true_y[:, 0, 1] * (true_model._v(t1) + 86) +
                     torch.from_numpy(np.random.normal(0, noise_sigma, t1.cpu().numpy().shape)).to(device))
-        if False:
-            i_batches1 = true_yo_batches1
-            for i, protocol in zip(i_batches1, protocol_batches1):
-                ii = i.cpu().numpy().reshape(-1)
-                pt = protocol[:, 0]
-                pv = protocol[:, 1]
-                t_split = pt[np.append([False], pv[:-1] != pv[1:])]
-                t_split = np.append(t_split, pt[-1] + 1)
-                t_i = 0
-                io = []
-                didto = []
-                tmp = []
-                for t_f in t_split:
-                    idx = np.where((t1 >= t_i) & (t1 < t_f))[0]
-                    tfit = t1.cpu().numpy()[idx]
-                    ifit = smooth(ii[idx], 151)[75:-75]  # smoothing with 151/10ms
-                    spl = UnivariateSpline(tfit, ifit, k=3)
-                    spl.set_smoothing_factor(1)
-                    io = np.append(io, spl(tfit))
-                    didto = np.append(didto, spl.derivative()(tfit))
-                    t_i = t_f
-                    tmp = np.append(tmp, ifit)
-                plt.plot(t1.cpu().numpy(), ii)
-                plt.plot(t1.cpu().numpy(), io)
-                plt.plot(t1.cpu().numpy(), didto)
-                plt.plot(t1.cpu().numpy(), tmp)
-                plt.show()
-                #sys.exit()
-                io = torch.from_numpy(io).to(device)
-                didto = torch.from_numpy(didto).to(device)
-            sys.exit()
 
         for protocol in protocol_batches2:
             true_y0 = gt_true_y0s[1]
@@ -641,76 +593,6 @@ with torch.no_grad():
     true_model.set_fixed_form_voltage_protocol(prediction_protocol[:, 0], prediction_protocol[:, 1])
     prediction_y = odeint(true_model, true_y0, prediction_t, method='dopri5')
     prediction_yo = prediction_y[:, 0, 0] * prediction_y[:, 0, 1] * (true_model._v(prediction_t) + 86)
-
-if args.debug and False:
-    import matplotlib.pyplot as plt
-    #
-    # Fit exponentials
-    #
-    import scipy.optimize
-    def monoExp(x, m, t, b):
-        return m * np.exp(-t * x) + b
-    def biExp(x, m, t, b, n, r):
-        return m * np.exp(-t * x) + n * np.exp(-r * x) + b
-    #
-    #
-    #
-    for protocol, true_y, true_o in zip(protocol_batches, true_y_batches, true_yo_batches):
-        #plt.plot(t.cpu().numpy(), true_y.cpu().numpy()[:, 0, :])
-        plt.plot(t.cpu().numpy(), true_o.reshape(-1).cpu().numpy(), '#7f7f7f', label='Model 10')
-        try:
-            # perform the fit
-            #
-            p0 = (-20., .01, -.5)
-            params, cv = scipy.optimize.curve_fit(monoExp, t.cpu().numpy()[25:], true_o.reshape(-1).cpu().numpy()[25:], p0)
-            m, d, b = params
-            print(m, d, b)
-            p02 = (-20., .01, -.5, -5., .001)
-            params2, cv2 = scipy.optimize.curve_fit(biExp, t.cpu().numpy()[25:], true_o.reshape(-1).cpu().numpy()[25:], p02)
-            m2, d2, b2, n2, r2 = params2
-            print(m2, d2, b2, n2, r2)
-            #
-            #
-            plt.plot(t.cpu().numpy()[25:], monoExp(t.cpu().numpy()[25:], m, d, b), 'r--', label='Mono-exp.')
-            plt.plot(t.cpu().numpy()[25:], biExp(t.cpu().numpy()[25:], m2, d2, b2, n2, r2), 'b--', label='Bi-exp.')
-        except:
-            pass
-        plt.title('V = %s mV' % protocol[0, 1])
-        plt.ylabel('Current (g=1)')
-        plt.xlabel('Time (ms)')
-        plt.legend()
-        #print(true_y.cpu().numpy()[-1, 0, :])
-        plt.show()
-    sys.exit()
-
-if args.debug and False:
-    for protocol, true_y, true_o in zip(protocol_batches1, true_y_batches1, true_yo_batches1):
-        plt.plot(t1.cpu().numpy(), true_o.reshape(-1).cpu().numpy(), '#7f7f7f', label='Model 10')
-        plt.title('V = %s mV' % protocol[0, 1])
-        plt.ylabel('Current (g=1)')
-        plt.xlabel('Time (ms)')
-        plt.legend()
-        #print(true_y.cpu().numpy()[-1, 0, :])
-        plt.show()
-    for protocol, true_y, true_o in zip(protocol_batches2, true_y_batches2, true_yo_batches2):
-        plt.plot(t2.cpu().numpy(), true_o.reshape(-1).cpu().numpy(), '#7f7f7f', label='Model 10')
-        plt.title('V = %s mV' % protocol[0, 1])
-        plt.ylabel('Current (g=1)')
-        plt.xlabel('Time (ms)')
-        plt.legend()
-        #print(true_y.cpu().numpy()[-1, 0, :])
-        plt.show()
-    if use_pt3:
-        for protocol, true_y, true_o in zip(protocol_batches3, true_y_batches3, true_yo_batches3):
-            plt.plot(t3.cpu().numpy(), true_o.reshape(-1).cpu().numpy(), '#7f7f7f', label='Model 10')
-            plt.title('V = %s mV' % protocol[0, 1])
-            plt.ylabel('Current (g=1)')
-            plt.xlabel('Time (ms)')
-            plt.legend()
-            #print(true_y.cpu().numpy()[-1, 0, :])
-            plt.show()
-    sys.exit()
-
 
 
 if args.cached:
@@ -796,18 +678,12 @@ else:
         for t_f in t_split:
             idx = np.where((t1 >= t_i) & (t1 < t_f))[0]
             tfit = t1.cpu().numpy()[idx]
-            ifit = smooth(ii[idx], 61)[30:-30]  # smoothing with 151/10ms
+            ifit = smooth(ii[idx], 61)[30:-30]  # smoothing
             spl = UnivariateSpline(tfit, ifit, k=3)
-            spl.set_smoothing_factor(0)#.1)  # s is the smoothing factor; if 0, spline will interpolate through all data points
+            spl.set_smoothing_factor(0)
             io = np.append(io, spl(tfit))
             didto = np.append(didto, spl.derivative()(tfit))
             t_i = t_f
-        if False:
-            plt.plot(t1.cpu().numpy(), ii)
-            plt.plot(t1.cpu().numpy(), io)
-            plt.plot(t1.cpu().numpy(), didto)
-            plt.show()
-            sys.exit()
         i_batches1[j] = torch.from_numpy(io).to(device)
         didt_batches1.append(torch.from_numpy(didto).to(device))
     for j, (i, protocol) in enumerate(zip(i_batches2, protocol_batches2)):
@@ -822,20 +698,14 @@ else:
         for t_f in t_split:
             idx = np.where((t2 >= t_i) & (t2 < t_f))[0]
             tfit = t2.cpu().numpy()[idx]
-            ifit = smooth(ii[idx], 61)[30:-30]  # smoothing with 151/10ms
+            ifit = smooth(ii[idx], 61)[30:-30]  # smoothing
             spl = UnivariateSpline(tfit, ifit, k=3)
-            spl.set_smoothing_factor(0)#.1)  # s is the smoothing factor; if 0, spline will interpolate through all data points
+            spl.set_smoothing_factor(0)
             io = np.append(io, spl(tfit))
             didto = np.append(didto, spl.derivative()(tfit))
             t_i = t_f
         i_batches2[j] = torch.from_numpy(io).to(device)
         didt_batches2.append(torch.from_numpy(didto).to(device))
-    if False:
-        plt.plot(t2.cpu().numpy(), ii, 'kx')
-        plt.plot(t2.cpu().numpy(), io)
-        plt.plot(t2.cpu().numpy(), didto, '--')
-        plt.show()
-        sys.exit()
     if use_pt3:
         didt_batches3 = []
         i_batches3 = true_yo_batches3
@@ -851,9 +721,9 @@ else:
             for t_f in t_split:
                 idx = np.where((t3 >= t_i) & (t3 < t_f))[0]
                 tfit = t3.cpu().numpy()[idx]
-                ifit = smooth(ii[idx], 61)[30:-30]  # smoothing with 151/10ms
+                ifit = smooth(ii[idx], 61)[30:-30]  # smoothing
                 spl = UnivariateSpline(tfit, ifit, k=3)
-                spl.set_smoothing_factor(0)#.1)  # s is the smoothing factor; if 0, spline will interpolate through all data points
+                spl.set_smoothing_factor(0)
                 io = np.append(io, spl(tfit))
                 didto = np.append(didto, spl.derivative()(tfit))
                 t_i = t_f
@@ -892,12 +762,6 @@ else:
                 )
         a_batches2.append(a)
         dadt_batches2.append(dadt)
-    if False:
-        plt.plot(t2.cpu().numpy(), ii.reshape(-1).cpu().numpy())
-        plt.plot(t2.cpu().numpy(), a.reshape(-1).cpu().numpy())
-        plt.plot(t2.cpu().numpy(), dadt.reshape(-1).cpu().numpy())
-        plt.show()
-        sys.exit()
     if use_pt3:
         a_batches3 = []
         dadt_batches3 = []
@@ -929,12 +793,6 @@ else:
             v_batches3[i] = v[mask3s[i],...][skip::sparse]
             a_batches3[i] = a[mask3s[i],...][skip::sparse]
             dadt_batches3[i] = dadt[mask3s[i],...][skip::sparse]
-    if False:
-        plt.plot(v_batches1[-1])
-        plt.plot(a_batches1[-1])
-        plt.plot(dadt_batches1[-1])
-        plt.show()
-        sys.exit()
     if use_pt3:
         v_batches = torch.cat(v_batches1 + v_batches2 + v_batches3).to(device)
         a_batches = torch.cat(a_batches1 + a_batches2 + a_batches3).to(device)
@@ -949,15 +807,9 @@ else:
     torch.save(a_batches, 's1/a.pt')
     torch.save(dadt_batches, 's1/dadt.pt')
 
-    if args.debug and True:
+    if args.debug:
         import matplotlib.pyplot as plt
         from mpl_toolkits import mplot3d
-        #plt.plot(t.cpu().numpy(), r_batches[0].reshape(-1).cpu().numpy())
-        #plt.plot(t.cpu().numpy(), i_batches[0].reshape(-1).cpu().numpy())
-        #plt.plot(t.cpu().numpy(), drdt_batches[0].reshape(-1).cpu().numpy())
-        #plt.plot(t.cpu().numpy(), didt_batches[0].reshape(-1).cpu().numpy())
-        #plt.show()
-        #plt.close()
 
         fig = plt.figure()
         ax = plt.axes(projection='3d')
@@ -967,7 +819,7 @@ else:
         ax.set_ylabel('a')
         ax.set_zlabel('da/dt')
         plt.show()
-        sys.exit()
+        #sys.exit()
 ###
 ###
 ###
