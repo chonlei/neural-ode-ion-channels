@@ -26,19 +26,21 @@ The following codes re-run the training for the models.
 
 #### Synthetic data studies (no discrepancy)
 
-- NN-f: [`s1.py`](./s1.py)
-- NN-d: [`s2.py`](./s2.py)
+- NN-f: [`train-s1.py`](./train-s1.py)
+- NN-d: [`train-s2.py`](./train-s2.py)
 
 #### Synthetic data studies (with discrepancy)
 
-- Candidate model: [`d0-m.py`](./d0-m.py)
-- NN-f: [`d1.py`](./d1.py)
-- NN-d: [`d2.py`](./d2.py)
+- Candidate model: [`train-d0-m.py`](./train-d0-m.py)
+- NN-f: [`train-d1.py`](./train-d1.py)
+- NN-d: [`train-d2.py`](./train-d2.py)
 
 #### Experimental data
 
-- NN-f: [`r1.py`](./r1.py)
-- NN-d: [`r2.py`](./r2.py)
+- NN-f: [`train-r1.py`](./train-r1.py)
+- NN-d: [`train-r2.py`](./train-r2.py)
+
+Their trained results are stored in directories `s1`, `s2`, `d1`, etc.
 
 
 Main figures
