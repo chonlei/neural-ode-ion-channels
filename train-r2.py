@@ -19,12 +19,10 @@ from torch.optim.lr_scheduler import StepLR
 
 parser = argparse.ArgumentParser('IKr real data fit with NN-d.')
 parser.add_argument('--method', type=str, choices=['dopri5', 'adams'], default='dopri5')
-parser.add_argument('--niters', type=int, default=4000)
 parser.add_argument('--gpu', type=int, default=0)
 parser.add_argument('--debug', action='store_true')
 parser.add_argument('--pred', action='store_true')
 parser.add_argument('--cached', action='store_true')
-parser.add_argument('--finetune', action='store_true')
 args = parser.parse_args()
 
 from torchdiffeq import odeint
@@ -45,7 +43,6 @@ e = torch.tensor([-88.4]).to(device)  # assume we know
 # https://github.com/CardiacModelling/FourWaysOfFitting/blob/master/method-3/cell-5-fit-3-run-001.txt
 g = torch.tensor([0.133898199260611944]).to(device)  # assume we know
 g *= 1.2  # just because we see a-gate gets to ~1.2 at some point (in prt V=50), so can absorb that into the g.
-#e -= 5    # just because in pr4, at -90 mV, a-gates became negative, meaning e < -90mV; and only if adding an extra -5mV, a ~ [0, 1].
 
 #
 #
@@ -165,16 +162,6 @@ class ODEFunc(nn.Module):
         self.vrange = torch.tensor([100.]).to(device)
         self.netscale = torch.tensor([1000.]).to(device)
 
-        # https://physoc.onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1113%2FJP275733&file=tjp12905-sup-0001-textS1.pdf#page=20
-        # Table F11, Cell #5 parameters
-        #self.p1 = 2.26e-4
-        #self.p2 = 6.99e-2
-        #self.p3 = 3.45e-5
-        #self.p4 = 5.46e-2
-        #self.p5 = 8.73e-2
-        #self.p6 = 8.90e-3
-        #self.p7 = 5.20e-3
-        #self.p8 = 3.16e-2
         # https://github.com/CardiacModelling/FourWaysOfFitting/blob/master/method-3/cell-5-fit-3-run-001.txt
         self.p1 = 2.10551451120238317e-04
         self.p2 = 6.57994674459572992e-02
@@ -508,6 +495,7 @@ else:
     d2adt2_batches1 = []
     for j, (i, r, v) in enumerate(zip(i_batches1, r_batches1, v_batches1)):
         std_cutoff = 0.01
+        #std_cutoff = np.nan
         pt = time1
         pv = voltage1
         cc = change_pt1
@@ -571,6 +559,7 @@ else:
     d2adt2_batches2 = []
     for j, (i, r, v) in enumerate(zip(i_batches2, r_batches2, v_batches2)):
         std_cutoff = 0.015
+        #std_cutoff = np.nan
         pt = time2
         pv = voltage2
         cc = change_pt2
@@ -638,6 +627,7 @@ else:
     d2adt2_batches3 = []
     for j, (i, r, v) in enumerate(zip(i_batches3, r_batches3, v_batches3)):
         std_cutoff = 0.015
+        #std_cutoff = np.nan
         pt = time3
         pv = voltage3
         cc = change_pt3
@@ -724,13 +714,7 @@ else:
         a_batches3[i] = a[mask3,...][skip::sparse]
         dadt_batches3[i] = dadt[mask3,...][skip::sparse]
         d2adt2_batches3[i] = d2adt2[mask3,...][skip::sparse]
-    if False:
-        plt.plot(time1[mask1,...][skip::sparse], v_batches1[-1].cpu().numpy())
-        plt.plot(time1[mask1,...][skip::sparse], a_batches1[-1].cpu().numpy())
-        plt.plot(time1[mask1,...][skip::sparse], dadt_batches1[-1].cpu().numpy())
-        plt.plot(time1[mask1,...][skip::sparse], d2adt2_batches1[-1].cpu().numpy())
-        plt.show()
-        #sys.exit()
+    # Not using sine wave
     v_batches = torch.cat(v_batches1 + v_batches3).to(device)
     a_batches = torch.cat(a_batches1 + a_batches3).to(device)
     dadt_batches = torch.cat(dadt_batches1 + dadt_batches3).to(device)
@@ -747,15 +731,9 @@ else:
     torch.save(dadt_batches, 'r2/dadt.pt')
     torch.save(d2adt2_batches, 'r2/d2adt2.pt')
 
-if args.debug and True:
+if args.debug:
     import matplotlib.pyplot as plt
     from mpl_toolkits import mplot3d
-    #plt.plot(t.cpu().numpy(), r_batches[0].reshape(-1).cpu().numpy())
-    #plt.plot(t.cpu().numpy(), i_batches[0].reshape(-1).cpu().numpy())
-    #plt.plot(t.cpu().numpy(), drdt_batches[0].reshape(-1).cpu().numpy())
-    #plt.plot(t.cpu().numpy(), didt_batches[0].reshape(-1).cpu().numpy())
-    #plt.show()
-    #plt.close()
 
     fig = plt.figure()
     ax = plt.axes(projection='3d')
@@ -765,114 +743,9 @@ if args.debug and True:
     ax.set_ylabel('a')
     ax.set_zlabel('da/dt')
     plt.show()
-    sys.exit()
 ###
 ###
 ###
-
-
-if args.finetune:
-    ii = 500
-    thres = 5e-2
-    func = ODEFunc().to(device)
-    func.load_state_dict(torch.load('r2/model-state-dict.pt'))
-    loss_fn = torch.nn.MSELoss(reduction='sum')
-    # Remove a < 0 (probably due to the slight error in the reverseal potential)
-    #to_keep = x_av[:, 1] > 0.01
-    to_keep = a_batches > 0
-    a_batches = a_batches[to_keep]
-    v_batches = v_batches[to_keep]
-    t_batches = t_batches[to_keep]
-    dadt_batches = dadt_batches[to_keep]
-    d2adt2_batches = d2adt2_batches[to_keep]
-    # Simulate and see where give bigger mismatch
-    with torch.no_grad():
-        func.set_fixed_form_voltage_protocol(
-            np.append(time1, time1[-1] + time2),
-            np.append(voltage1, voltage2)
-        )
-
-        #func.set_fixed_form_voltage_protocol(time1, voltage1)
-        true_y0 = true_y0s[1]  # (roughly holding at -80mV)
-        pred_y = odeint(func, true_y0, t_batches).to(device)
-        error = torch.abs(pred_y[:, 0, 0].reshape(-1) - a_batches.reshape(-1))
-        loss = torch.mean(error)
-
-        print('Training loss {:.6f}'.format(loss.item()))
-
-        to_tune = error > thres
-        
-        import matplotlib.pyplot as plt
-        fig, ax = plt.subplots(2, 1)
-        ax[0].plot(t_batches.reshape(-1).cpu().numpy(), a_batches.reshape(-1).cpu().numpy())
-        ax[0].plot(t_batches.reshape(-1).cpu().numpy(), pred_y[:, 0, 0].reshape(-1).cpu().numpy())
-        ax[0].fill_between(t_batches.reshape(-1).cpu().numpy(), 0, 1, where=to_tune, alpha=0.4, transform=ax[0].get_xaxis_transform())
-        ax[1].plot(t_batches.reshape(-1).cpu().numpy(), (a_batches.reshape(-1) * pred_y[:, 0, 1].reshape(-1) * (v_batches - e)).cpu().numpy())
-        ax[1].plot(t_batches.reshape(-1).cpu().numpy(), (pred_y[:, 0, 0] * pred_y[:, 0, 1].reshape(-1) * (v_batches - e)).reshape(-1).cpu().numpy())
-        ax[1].fill_between(t_batches.reshape(-1).cpu().numpy(), 0, 1, where=to_tune, alpha=0.4, transform=ax[1].get_xaxis_transform())
-        plt.show()
-        #sys.exit()
-
-    x_av = torch.stack([v_batches.reshape(-1) / func.vrange, a_batches.reshape(-1)]).T
-    model_dadt = func._dadt(a_batches.reshape(-1), v_batches.reshape(-1))
-    y_dadt = dadt_batches.reshape(-1)
-
-    # Get those regions for training
-    x_av = x_av[to_tune, :]
-    model_dadt = model_dadt[to_tune]
-    y_dadt = y_dadt[to_tune]
-
-    opt = optim.Adam(func.net.parameters(), lr=1e-5)#, momentum=0.9)
-    # gamma = decaying factor
-    scheduler = StepLR(opt, step_size=100, gamma=0.9)  # 0.9**(4000steps/100) ~ 0.016
-    for itr in range(1000):
-        p = func.net(x_av.float()).to(device) / func.netscale
-        p += model_dadt.reshape(-1, 1)
-        loss = loss_fn(p.reshape(-1), y_dadt.float())
-        opt.zero_grad()
-        loss.backward()
-        opt.step()
-        # Decay Learning Rate
-        scheduler.step()
-        if (itr % 100) == 0:
-            print('Iter', itr, 'LR', opt.param_groups[0]['lr'], 'Loss', loss.item())
-        del(loss, p)
-    #'''
-
-    # Save model
-    torch.save(func.state_dict(), 'r2/model-state-dict.pt')
-    torch.save(func, 'r2/model-entire.pt')
-    # To load model:
-    # func = TheModelClass(*args, **kwargs)
-    # func.set_fixed_form_voltage_protocol(protocol[:, 0], protocol[:, 1])
-    # func.load_state_dict(torch.load('r2/model-state-dict.pt'))
-    # func.eval()
-    #
-    # Or:
-    # func = torch.load('r2/model-entire.pt')
-    # func.eval()
-
-    with torch.no_grad():
-        true_y0 = true_y0s[1]
-        func.set_fixed_form_voltage_protocol(timep1, voltagep1)
-        pred_y = odeint(func, true_y0, timep1_torch).to(device)
-        pred_yo = g * pred_y[:, 0, 0] * pred_y[:, 0, 1] * (func._v(timep1_torch).to(device) - e)
-        loss = torch.mean(torch.abs(pred_yo - torch.from_numpy(currentp1).to(device)))
-        print('Training | Total Loss {:.6f}'.format(loss.item()))
-        fig1, ax1 = plt.subplots(1, 1, figsize=(6, 4))
-        ax1.set_xlabel('t')
-        ax1.set_ylabel('i')
-        ax1.plot(timep1, currentp1, 'g-')
-        ax1.plot(timep1, pred_yo.reshape(-1).cpu().numpy(), 'b--')
-        ax1.set_xlim(timep1.min(), timep1.max())
-        fig1.tight_layout()
-        fig1.savefig('r2/{:03d}'.format(ii), dpi=200)
-        plt.close(fig1)
-
-        ii += 1
-
-    sys.exit()
-
 
 
 if __name__ == '__main__':
@@ -923,7 +796,6 @@ if __name__ == '__main__':
         pred = func.net(XX) / func.netscale
         ax.plot_surface(X1.cpu().numpy(), X2.cpu().numpy(), pred.reshape(50, 50).detach().cpu().numpy())
         plt.show()
-        sys.exit()
     ###"""
 
     ###
@@ -945,21 +817,6 @@ if __name__ == '__main__':
     ### Training
     ###
     #'''
-    # Add noise?!
-    if False:
-        a_batches = a_batches + (0.01)*torch.randn(a_batches.shape)
-        dadt_batches = dadt_batches + (0.01 * 0.005)*torch.randn(dadt_batches.shape)
-
-        import matplotlib.pyplot as plt
-        plt.subplot(311)
-        plt.plot(a_batches.reshape(-1).cpu().numpy())
-        plt.subplot(312)
-        plt.plot(dadt_batches.reshape(-1).cpu().numpy())
-        plt.subplot(313)
-        plt.plot(dadt_batches.reshape(-1).cpu().numpy())
-        plt.ylim(-0.005, 0.01)
-        plt.savefig('r2/tmp-data-2')
-        plt.close()
     #
     x_av = torch.stack([v_batches.reshape(-1) / func.vrange, a_batches.reshape(-1)]).T
 

@@ -19,7 +19,6 @@ from torch.optim.lr_scheduler import StepLR
 
 parser = argparse.ArgumentParser('IKr real data fit with NN-f.')
 parser.add_argument('--method', type=str, choices=['dopri5', 'adams'], default='dopri5')
-parser.add_argument('--niters', type=int, default=4000)
 parser.add_argument('--gpu', type=int, default=0)
 parser.add_argument('--debug', action='store_true')
 parser.add_argument('--pred', action='store_true')
@@ -224,7 +223,6 @@ if args.pred:
     best_checkpoint = torch.load('r1/best-model-checkpoint.pt')
     func.load_state_dict(best_checkpoint['state_dict'])
     print('Best checkpoint loss:', best_checkpoint['loss'])
-    #func = torch.load('r1/model-entire.pt').to(device)
     func.eval()
 
     ii = 999
@@ -459,6 +457,7 @@ else:
     d2adt2_batches1 = []
     for j, (i, r, v) in enumerate(zip(i_batches1, r_batches1, v_batches1)):
         std_cutoff = 0.01
+        #std_cutoff = np.nan
         pt = time1
         pv = voltage1
         cc = change_pt1
@@ -522,6 +521,7 @@ else:
     d2adt2_batches2 = []
     for j, (i, r, v) in enumerate(zip(i_batches2, r_batches2, v_batches2)):
         std_cutoff = 0.015
+        #std_cutoff = np.nan
         pt = time2
         pv = voltage2
         cc = change_pt2
@@ -599,6 +599,7 @@ else:
     d2adt2_batches3 = []
     for j, (i, r, v) in enumerate(zip(i_batches3, r_batches3, v_batches3)):
         std_cutoff = 0.015
+        #std_cutoff = np.nan
         pt = time3
         pv = voltage3
         cc = change_pt3
@@ -685,13 +686,7 @@ else:
         a_batches3[i] = a[mask3,...][skip::sparse]
         dadt_batches3[i] = dadt[mask3,...][skip::sparse]
         d2adt2_batches3[i] = d2adt2[mask3,...][skip::sparse]
-    if False:
-        plt.plot(time1[mask1,...][skip::sparse], v_batches1[-1].cpu().numpy())
-        plt.plot(time1[mask1,...][skip::sparse], a_batches1[-1].cpu().numpy())
-        plt.plot(time1[mask1,...][skip::sparse], dadt_batches1[-1].cpu().numpy())
-        plt.plot(time1[mask1,...][skip::sparse], d2adt2_batches1[-1].cpu().numpy())
-        plt.show()
-        #sys.exit()
+    # Not using sine wave
     v_batches = torch.cat(v_batches1 + v_batches3).to(device)
     a_batches = torch.cat(a_batches1 + a_batches3).to(device)
     dadt_batches = torch.cat(dadt_batches1 + dadt_batches3).to(device)
@@ -708,15 +703,9 @@ else:
     torch.save(dadt_batches, 'r1/dadt.pt')
     torch.save(d2adt2_batches, 'r1/d2adt2.pt')
 
-if args.debug and True:
+if args.debug:
     import matplotlib.pyplot as plt
     from mpl_toolkits import mplot3d
-    #plt.plot(t.cpu().numpy(), r_batches[0].reshape(-1).cpu().numpy())
-    #plt.plot(t.cpu().numpy(), i_batches[0].reshape(-1).cpu().numpy())
-    #plt.plot(t.cpu().numpy(), drdt_batches[0].reshape(-1).cpu().numpy())
-    #plt.plot(t.cpu().numpy(), didt_batches[0].reshape(-1).cpu().numpy())
-    #plt.show()
-    #plt.close()
 
     fig = plt.figure()
     ax = plt.axes(projection='3d')
@@ -726,7 +715,6 @@ if args.debug and True:
     ax.set_ylabel('a')
     ax.set_zlabel('da/dt')
     plt.show()
-    sys.exit()
 ###
 ###
 ###
@@ -779,7 +767,6 @@ if __name__ == '__main__':
         pred = func.net(XX) / func.netscale
         ax.plot_surface(X1.cpu().numpy(), X2.cpu().numpy(), pred.reshape(50, 50).detach().cpu().numpy())
         plt.show()
-        sys.exit()
     ###"""
 
     ###
@@ -819,21 +806,6 @@ if __name__ == '__main__':
     to_keep = x_av[:, 1] > 0
     x_av = x_av[to_keep, :]
     y_dadt = y_dadt[to_keep]
-
-    if False:
-        x_av[:, 1] = x_av[:, 1] + (0.002)*torch.randn(x_av[:, 1].shape)
-        y_dadt = y_dadt + (0.002 * 0.005)*torch.randn(y_dadt.shape)
-
-        import matplotlib.pyplot as plt
-        plt.subplot(311)
-        plt.plot(a_batches.reshape(-1).cpu().numpy())
-        plt.subplot(312)
-        plt.plot(dadt_batches.reshape(-1).cpu().numpy())
-        plt.subplot(313)
-        plt.plot(dadt_batches.reshape(-1).cpu().numpy())
-        plt.ylim(-0.005, 0.01)
-        plt.savefig('r1/tmp-data')
-        plt.close()
 
     opt = optim.Adam(func.net.parameters(), lr=0.001)
     # gamma = decaying factor
