@@ -8,10 +8,10 @@ Requirements
 
 To run the code within this repository requires
 
-- Python 3.5+
-- torchdiffeq
-- pints
-- seaborn
+- [Python 3.5+](https://www.python.org/)
+- [`torchdiffeq`](https://github.com/rtqichen/torchdiffeq)
+- [`pints`](https://github.com/pints-team/pints)
+- [`seaborn`](https://seaborn.pydata.org)
 
 which can be installed via
 ```
