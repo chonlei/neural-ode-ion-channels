@@ -30,7 +30,7 @@ The following codes re-run the training for the models.
 
 #### Synthetic data studies (with discrepancy)
 
-- Candidate model: [`train-d0-m.py`](./train-d0-m.py)
+- Candidate model: [`train-d0.py`](./train-d0.py)
 - NN-f: [`train-d1.py`](./train-d1.py)
 - NN-d: [`train-d2.py`](./train-d2.py)
 
