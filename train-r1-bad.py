@@ -17,13 +17,13 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 
-parser = argparse.ArgumentParser('IKr NN ODE to real data')
+parser = argparse.ArgumentParser('IKr real data fit with NN-f using insufficient protocols.')
 parser.add_argument('--method', type=str, choices=['dopri5', 'adams'], default='dopri5')
-parser.add_argument('--niters', type=int, default=4000)
 parser.add_argument('--gpu', type=int, default=0)
 parser.add_argument('--debug', action='store_true')
 parser.add_argument('--pred', action='store_true')
 parser.add_argument('--cached', action='store_true')
+parser.add_argument('--smoothi', action='store_true')
 args = parser.parse_args()
 
 from torchdiffeq import odeint
@@ -343,7 +343,8 @@ if args.cached:
     v_batches = torch.load('r1-bad/v.pt')
     a_batches = torch.load('r1-bad/a.pt')
     dadt_batches = torch.load('r1-bad/dadt.pt')
-    d2adt2_batches = torch.load('r1-bad/d2adt2.pt')
+    if args.smoothi:
+        d2adt2_batches = torch.load('r1-bad/d2adt2.pt')
 else:
     ###
     ### 'post-processing': estimating dadt and a
@@ -370,176 +371,280 @@ else:
         v_batches2.append(m._v(time2_torch)[0].to(device))
     i_batches1 = [torch.from_numpy(current1).to(device)]
     i_batches2 = [torch.from_numpy(current2).to(device)]
-    # Calculate a and dadt
-    import pints
-    from scipy import optimize
-    x02 = [0.7, 1./50., 0.2, 1./100., 0.1, 1./200., 0.01]
-    x0 = [1, 1./100., 0.5, 1./200., 0.25, 1./400., 0.1]
-    def tri_exp(t, x):
-        a, b, c, d, e, f, g = x
-        return a * np.exp(-b * t) + c * np.exp(-d * t) + e * np.exp(-f * t) + g
+    if args.smoothi:
+        # Calculate a and dadt
+        import pints
+        from scipy import optimize
+        x02 = [0.7, 1./50., 0.2, 1./100., 0.1, 1./200., 0.01]
+        x0 = [1, 1./100., 0.5, 1./200., 0.25, 1./400., 0.1]
+        def tri_exp(t, x):
+            a, b, c, d, e, f, g = x
+            return a * np.exp(-b * t) + c * np.exp(-d * t) + e * np.exp(-f * t) + g
 
-    def dtri_exp(t, x):
-        a, b, c, d, e, f, g = x
-        return -a*b * np.exp(-b * t) - c*d * np.exp(-d * t) - e*f * np.exp(-f * t)
+        def dtri_exp(t, x):
+            a, b, c, d, e, f, g = x
+            return -a*b * np.exp(-b * t) - c*d * np.exp(-d * t) - e*f * np.exp(-f * t)
 
-    def d2tri_exp(t, x):
-        a, b, c, d, e, f, g = x
-        return a*b*b * np.exp(-b * t) + c*d*d * np.exp(-d * t) + e*f*f * np.exp(-f * t)
+        def d2tri_exp(t, x):
+            a, b, c, d, e, f, g = x
+            return a*b*b * np.exp(-b * t) + c*d*d * np.exp(-d * t) + e*f*f * np.exp(-f * t)
 
-    a_batches1 = []
-    dadt_batches1 = []
-    d2adt2_batches1 = []
-    for j, (i, r, v) in enumerate(zip(i_batches1, r_batches1, v_batches1)):
-        std_cutoff = 0.01
-        #std_cutoff = np.nan
-        pt = time1
-        pv = voltage1
-        cc = change_pt1
-        dd = cap_mask1
-        t_split = pt[~cc]
-        t_split = np.append(t_split, pt[-1] + 1)
-        t_i = 0
+        a_batches1 = []
+        dadt_batches1 = []
+        d2adt2_batches1 = []
+        for j, (i, r, v) in enumerate(zip(i_batches1, r_batches1, v_batches1)):
+            std_cutoff = 0.01
+            #std_cutoff = np.nan
+            pt = time1
+            pv = voltage1
+            cc = change_pt1
+            dd = cap_mask1
+            t_split = pt[~cc]
+            t_split = np.append(t_split, pt[-1] + 1)
+            t_i = 0
 
-        a = (i / (g * r * (v - e))).cpu().numpy()
+            a = (i / (g * r * (v - e))).cpu().numpy()
 
-        tt = pt[dd]
-        aa = a.reshape(-1)[dd]
+            tt = pt[dd]
+            aa = a.reshape(-1)[dd]
 
-        ao = np.zeros(pt.shape)
-        dadto = np.zeros(pt.shape)
-        d2adt2o = np.zeros(pt.shape)
+            ao = np.zeros(pt.shape)
+            dadto = np.zeros(pt.shape)
+            d2adt2o = np.zeros(pt.shape)
 
-        for t_f in t_split:
-            idx = np.where((tt >= t_i) & (tt < t_f))[0]
-            std = np.std(aa[idx])
-            tfit = tt[idx]
-            idx_full = np.where((pt >= tfit[0]) & (pt <= tfit[-1]))[0]
-            if std > std_cutoff:
-                #afit = smooth(aa[idx], 201)[100:-100]  # smoothing with 51/10ms
-                afit = aa[idx]
-                t = tfit - tfit[0]
-                def f(x):
-                    return np.sqrt(np.mean((tri_exp(t, x) - afit)**2))
-                xopt = optimize.fmin(f, x0, disp=False)
+            for t_f in t_split:
+                idx = np.where((tt >= t_i) & (tt < t_f))[0]
+                std = np.std(aa[idx])
+                tfit = tt[idx]
+                idx_full = np.where((pt >= tfit[0]) & (pt <= tfit[-1]))[0]
+                if std > std_cutoff:
+                    afit = aa[idx]
+                    t = tfit - tfit[0]
+                    def f(x):
+                        return np.sqrt(np.mean((tri_exp(t, x) - afit)**2))
+                    xopt = optimize.fmin(f, x0, disp=False)
 
-                ao[idx_full] = tri_exp(t, xopt)
-                dadto[idx_full] = dtri_exp(t, xopt)
-                d2adt2o[idx_full] = d2tri_exp(t, xopt)
-                print(v[idx_full][0].item(), std, 'exp fit')
-            else:
-                afit = smooth(aa[idx], 51)[25:-25]  # smoothing with 51/10ms
-                spl = UnivariateSpline(tfit, afit, k=4)  # want smooth 2nd derivate, so k>3
-                spl.set_smoothing_factor(0.2)
-
-                ao[idx_full] = spl(tfit)
-                dadto[idx_full] = spl(tfit, 1)
-                d2adt2o[idx_full] = spl(tfit, 2)
-                print(v[idx_full][0].item(), std, 'spline fit')
-
-
-            t_i = t_f
-
-        a_batches1.append(torch.from_numpy(ao).to(device))
-        dadt_batches1.append(torch.from_numpy(dadto).to(device))
-        d2adt2_batches1.append(torch.from_numpy(d2adt2o).to(device))
-    if True:
-        plt.plot(time1[dd], a[dd])
-        plt.plot(time1, a_batches1[-1].reshape(-1).cpu().numpy())
-        plt.plot(time1, dadt_batches1[-1].reshape(-1).cpu().numpy())
-        plt.plot(time1, d2adt2_batches1[-1].reshape(-1).cpu().numpy())
-        #plt.show()
-        plt.savefig('r1-bad/tmp1', dpi=200)
-        plt.close()
-    a_batches2 = []
-    dadt_batches2 = []
-    d2adt2_batches2 = []
-    for j, (i, r, v) in enumerate(zip(i_batches2, r_batches2, v_batches2)):
-        std_cutoff = 0.015
-        #std_cutoff = np.nan
-        pt = time2
-        pv = voltage2
-        cc = change_pt2
-        dd = cap_mask2
-        t_split = pt[~cc]
-        t_split = np.append(t_split, pt[-1] + 1)
-        t_i = 0
-
-        a = (i / (g * r * (v - e))).cpu().numpy()
-
-        tt = pt[dd]
-        aa = a.reshape(-1)[dd]
-
-        ao = np.zeros(pt.shape)
-        dadto = np.zeros(pt.shape)
-        d2adt2o = np.zeros(pt.shape)
-
-        for t_f in t_split:
-            idx = np.where((tt >= t_i) & (tt < t_f))[0]
-            std = np.std(aa[idx])
-            tfit = tt[idx]
-            idx_full = np.where((pt >= tfit[0]) & (pt <= tfit[-1]))[0]
-            if std > std_cutoff:
-                #afit = smooth(aa[idx], 201)[100:-100]  # smoothing with 51/10ms
-                afit = aa[idx]
-                t = tfit - tfit[0]
-                def f(x):
-                    return np.sqrt(np.mean((tri_exp(t, x) - afit)**2))
-                if v[idx_full][0].item() == -90:
-                    xopt, _ = pints.fmin(f, x02, method=pints.CMAES)
-                    print('PINTS...')
+                    ao[idx_full] = tri_exp(t, xopt)
+                    dadto[idx_full] = dtri_exp(t, xopt)
+                    d2adt2o[idx_full] = d2tri_exp(t, xopt)
+                    print(v[idx_full][0].item(), std, 'exp fit')
                 else:
-                    xopt = optimize.fmin(f, x02, disp=False)
+                    afit = smooth(aa[idx], 51)[25:-25]  # smoothing with 51/10ms
+                    spl = UnivariateSpline(tfit, afit, k=4)  # want smooth 2nd derivate, so k>3
+                    spl.set_smoothing_factor(0.2)
 
-                ao[idx_full] = tri_exp(t, xopt)
-                dadto[idx_full] = dtri_exp(t, xopt)
-                d2adt2o[idx_full] = d2tri_exp(t, xopt)
-                print(v[idx_full][0].item(), std, 'exp fit')
+                    ao[idx_full] = spl(tfit)
+                    dadto[idx_full] = spl(tfit, 1)
+                    d2adt2o[idx_full] = spl(tfit, 2)
+                    print(v[idx_full][0].item(), std, 'spline fit')
+
+
+                t_i = t_f
+
+            a_batches1.append(torch.from_numpy(ao).to(device))
+            dadt_batches1.append(torch.from_numpy(dadto).to(device))
+            d2adt2_batches1.append(torch.from_numpy(d2adt2o).to(device))
+        if True:
+            plt.plot(time1[dd], a[dd])
+            plt.plot(time1, a_batches1[-1].reshape(-1).cpu().numpy())
+            plt.plot(time1, dadt_batches1[-1].reshape(-1).cpu().numpy())
+            plt.plot(time1, d2adt2_batches1[-1].reshape(-1).cpu().numpy())
+            #plt.show()
+            plt.savefig('r1-bad/tmp1', dpi=200)
+            plt.close()
+        a_batches2 = []
+        dadt_batches2 = []
+        d2adt2_batches2 = []
+        for j, (i, r, v) in enumerate(zip(i_batches2, r_batches2, v_batches2)):
+            std_cutoff = 0.015
+            #std_cutoff = np.nan
+            pt = time2
+            pv = voltage2
+            cc = change_pt2
+            dd = cap_mask2
+            t_split = pt[~cc]
+            t_split = np.append(t_split, pt[-1] + 1)
+            t_i = 0
+
+            a = (i / (g * r * (v - e))).cpu().numpy()
+
+            tt = pt[dd]
+            aa = a.reshape(-1)[dd]
+
+            ao = np.zeros(pt.shape)
+            dadto = np.zeros(pt.shape)
+            d2adt2o = np.zeros(pt.shape)
+
+            for t_f in t_split:
+                idx = np.where((tt >= t_i) & (tt < t_f))[0]
+                std = np.std(aa[idx])
+                tfit = tt[idx]
+                idx_full = np.where((pt >= tfit[0]) & (pt <= tfit[-1]))[0]
+                if std > std_cutoff:
+                    afit = aa[idx]
+                    t = tfit - tfit[0]
+                    def f(x):
+                        return np.sqrt(np.mean((tri_exp(t, x) - afit)**2))
+                    if v[idx_full][0].item() == -90:
+                        xopt, _ = pints.fmin(f, x02, method=pints.CMAES)
+                        print('PINTS...')
+                    else:
+                        xopt = optimize.fmin(f, x02, disp=False)
+
+                    ao[idx_full] = tri_exp(t, xopt)
+                    dadto[idx_full] = dtri_exp(t, xopt)
+                    d2adt2o[idx_full] = d2tri_exp(t, xopt)
+                    print(v[idx_full][0].item(), std, 'exp fit')
+                else:
+                    afit = smooth(aa[idx], 51)[25:-25]  # smoothing with 51/10ms
+                    spl = UnivariateSpline(tfit, afit, k=4)  # want smooth 2nd derivate, so k>3
+                    spl.set_smoothing_factor(0.2)
+
+                    ao[idx_full] = spl(tfit)
+                    dadto[idx_full] = spl(tfit, 1)
+                    d2adt2o[idx_full] = spl(tfit, 2)
+                    print(v[idx_full][0].item(), std, 'spline fit')
+
+                t_i = t_f
+
+            a_batches2.append(torch.from_numpy(ao).to(device))
+            dadt_batches2.append(torch.from_numpy(dadto).to(device))
+            d2adt2_batches2.append(torch.from_numpy(d2adt2o).to(device))
+        if True:
+            plt.plot(time2[dd], a[dd])
+            plt.plot(time2, a_batches2[-1].reshape(-1).cpu().numpy())
+            plt.plot(time2, dadt_batches2[-1].reshape(-1).cpu().numpy())
+            plt.plot(time2, d2adt2_batches2[-1].reshape(-1).cpu().numpy())
+            #plt.show()
+            plt.savefig('r1-bad/tmp2', dpi=200)
+            plt.close()
+            #sys.exit()
+    else:
+        dvdt_constant = torch.tensor([0]).to(device)  # for now yes
+        drdt_batches1 = []
+        drdt_batches2 = []
+        for r, v in zip(r_batches1, v_batches1):
+            k3 = m.p5 * torch.exp(m.p6 * v)
+            k4 = m.p7 * torch.exp(-m.p8 * v)
+            drdt = -k3 * r + k4 * (1. - r)
+            drdt_batches1.append(drdt)
+        for r, v in zip(r_batches2, v_batches2):
+            k3 = m.p5 * torch.exp(m.p6 * v)
+            k4 = m.p7 * torch.exp(-m.p8 * v)
+            drdt = -k3 * r + k4 * (1. - r)
+            drdt_batches2.append(drdt)
+        didt_batches1 = []
+        for j, (i, v) in enumerate(zip(i_batches1, v_batches1)):
+            ii = i.cpu().numpy().reshape(-1)
+            pt = time1
+            pv = voltage1
+            cc = change_pt1
+            dd = cap_mask1
+            t_split = pt[~cc]
+            t_split = np.append(t_split, pt[-1] + 1)
+            t_i = 0
+            tt = pt[dd]
+            ii = ii[dd]
+            io = np.zeros(pt.shape)
+            didto = np.zeros(pt.shape)
+            for t_f in t_split:
+                idx = np.where((tt >= t_i) & (tt < t_f))[0]
+                tfit = tt[idx]
+                idx_full = np.where((pt >= tfit[0]) & (pt <= tfit[-1]))[0]
+                ifit = smooth(ii[idx], 61)[30:-30]  # smoothing
+                spl = UnivariateSpline(tfit, ifit, k=3)
+                spl.set_smoothing_factor(0)
+                io[idx_full] = spl(tfit)
+                didto[idx_full] = spl(tfit, 1)
+                t_i = t_f
+            i_batches1[j] = torch.from_numpy(io).to(device)
+            didt_batches1.append(torch.from_numpy(didto).to(device))
+        didt_batches2 = []
+        for j, (i, v) in enumerate(zip(i_batches2, v_batches2)):
+            ii = i.cpu().numpy().reshape(-1)
+            pt = time2
+            pv = voltage2
+            cc = change_pt2
+            dd = cap_mask2
+            t_split = pt[~cc]
+            t_split = np.append(t_split, pt[-1] + 1)
+            t_i = 0
+            tt = pt[dd]
+            ii = ii[dd]
+            io = np.zeros(pt.shape)
+            didto = np.zeros(pt.shape)
+            for t_f in t_split:
+                idx = np.where((tt >= t_i) & (tt < t_f))[0]
+                tfit = tt[idx]
+                idx_full = np.where((pt >= tfit[0]) & (pt <= tfit[-1]))[0]
+                ifit = smooth(ii[idx], 61)[30:-30]  # smoothing
+                spl = UnivariateSpline(tfit, ifit, k=3)
+                spl.set_smoothing_factor(0)
+                io[idx_full] = spl(tfit)
+                didto[idx_full] = spl(tfit, 1)
+                t_i = t_f
+            i_batches2[j] = torch.from_numpy(io).to(device)
+            didt_batches2.append(torch.from_numpy(didto).to(device))
+
+        # Calculate a and dadt
+        a_batches1 = []
+        dadt_batches1 = []
+        for j, (i, r, v, drdt, didt) in enumerate(zip(i_batches1, r_batches1, v_batches1, drdt_batches1, didt_batches1)):
+            ii = i.reshape(-1)
+            a = ii / (g * r * (v - e))
+            if np.all(v.cpu().numpy() == v.cpu().numpy()[0]) or True:  # all steps even different values
+                dvdt = dvdt_constant
             else:
-                afit = smooth(aa[idx], 51)[25:-25]  # smoothing with 51/10ms
-                spl = UnivariateSpline(tfit, afit, k=4)  # want smooth 2nd derivate, so k>3
-                spl.set_smoothing_factor(0.2)
+                spl = UnivariateSpline(range(len(v.cpu().numpy())), v.cpu().numpy(), k=3, s=0)
+                dvdt = torch.from_numpy(spl.derivative()(range(len(v.cpu().numpy()))))
+            dadt = r ** (-1) * (
+                    (didt / g - a * r * dvdt) / (v - e)
+                    - a * drdt
+                    )
+            a_batches1.append(a)
+            dadt_batches1.append(dadt)
+        a_batches2 = []
+        dadt_batches2 = []
+        for j, (i, r, v, drdt, didt) in enumerate(zip(i_batches2, r_batches2, v_batches2, drdt_batches2, didt_batches2)):
+            ii = i.reshape(-1)
+            a = ii / (g * r * (v - e))
+            if np.all(v.cpu().numpy() == v.cpu().numpy()[0]) or True:  # all steps even different values
+                dvdt = dvdt_constant
+            else:
+                spl = UnivariateSpline(range(len(v.cpu().numpy())), v.cpu().numpy(), k=3, s=0)
+                dvdt = torch.from_numpy(spl.derivative()(range(len(v.cpu().numpy()))))
+            dadt = r ** (-1) * (
+                    (didt / g - a * r * dvdt) / (v - e)
+                    - a * drdt
+                    )
+            a_batches2.append(a)
+            dadt_batches2.append(dadt)
 
-                ao[idx_full] = spl(tfit)
-                dadto[idx_full] = spl(tfit, 1)
-                d2adt2o[idx_full] = spl(tfit, 2)
-                print(v[idx_full][0].item(), std, 'spline fit')
-
-            t_i = t_f
-
-        a_batches2.append(torch.from_numpy(ao).to(device))
-        dadt_batches2.append(torch.from_numpy(dadto).to(device))
-        d2adt2_batches2.append(torch.from_numpy(d2adt2o).to(device))
-    if True:
-        plt.plot(time2[dd], a[dd])
-        plt.plot(time2, a_batches2[-1].reshape(-1).cpu().numpy())
-        plt.plot(time2, dadt_batches2[-1].reshape(-1).cpu().numpy())
-        plt.plot(time2, d2adt2_batches2[-1].reshape(-1).cpu().numpy())
-        #plt.show()
-        plt.savefig('r1-bad/tmp2', dpi=200)
-        plt.close()
-        #sys.exit()
     # To tensors
-    for i, (v, a, dadt, d2adt2) in enumerate(zip(v_batches1, a_batches1, dadt_batches1, d2adt2_batches1)):
+    for i, (v, a, dadt) in enumerate(zip(v_batches1, a_batches1, dadt_batches1)):
         v_batches1[i] = v[mask1,...][skip::sparse]
         a_batches1[i] = a[mask1,...][skip::sparse]
         dadt_batches1[i] = dadt[mask1,...][skip::sparse]
-        d2adt2_batches1[i] = d2adt2[mask1,...][skip::sparse]
-    for i, (v, a, dadt, d2adt2) in enumerate(zip(v_batches2, a_batches2, dadt_batches2, d2adt2_batches2)):
+        if args.smoothi:
+            d2adt2_batches1[i] = d2adt2_batches1[i][mask1,...][skip::sparse]
+    for i, (v, a, dadt) in enumerate(zip(v_batches2, a_batches2, dadt_batches2)):
         v_batches2[i] = v[mask2,...][skip::sparse]
         a_batches2[i] = a[mask2,...][skip::sparse]
         dadt_batches2[i] = dadt[mask2,...][skip::sparse]
-        d2adt2_batches2[i] = d2adt2[mask2,...][skip::sparse]
+        if args.smoothi:
+            d2adt2_batches2[i] = d2adt2_batches2[i][mask2,...][skip::sparse]
     v_batches = torch.cat(v_batches1 + v_batches2).to(device)
     a_batches = torch.cat(a_batches1 + a_batches2).to(device)
     dadt_batches = torch.cat(dadt_batches1 + dadt_batches2).to(device)
-    d2adt2_batches = torch.cat(d2adt2_batches1 + d2adt2_batches2).to(device)
 
     # Cache it
     torch.save(v_batches, 'r1-bad/v.pt')
     torch.save(a_batches, 'r1-bad/a.pt')
     torch.save(dadt_batches, 'r1-bad/dadt.pt')
-    torch.save(d2adt2_batches, 'r1-bad/d2adt2.pt')
+
+    if args.smoothi:
+        d2adt2_batches = torch.cat(d2adt2_batches1 + d2adt2_batches2).to(device)
+        torch.save(d2adt2_batches, 'r1-bad/d2adt2.pt')
 
 if args.debug:
     import matplotlib.pyplot as plt
