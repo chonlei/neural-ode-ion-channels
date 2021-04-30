@@ -2,6 +2,10 @@
 
 Source code associated with an [article in Frontiers of Physiology](.) by [Chon Lok Lei](https://chonlei.github.io/) and [Gary R. Mirams](https://www.maths.nottingham.ac.uk/plp/pmzgm/).
 
+![Model structures used in this repository](https://raw.githubusercontent.com/chonlei/neural-ode-ion-channels/main/model-structure/model-structure-2.svg?token=AGL42DWDKBGQ2HF6JEWXOD3ASTU7I)
+
+From _left_ to _right_ shows the original Hodgkin-Huxley model (candidate model), the activation modelled using a neural network (NN-f), the activation with a neural network discrepancy term (NN-d), and the activation modelled with a three-state model (ground truth used in synthetic data studies with discrepancy).
+
 
 Requirements
 ------
