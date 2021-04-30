@@ -124,11 +124,18 @@ class Lambda(nn.Module):
 
         return torch.stack([dc1dt[0], dc2dt[0], didt[0], dic1dt[0], dic2dt[0], dodt[0]])
 
+
 if args.myokit:
     try:
         import myokit
-    except:
-        pass # TODO
+    except ModuleNotFoundError:
+        # Install myokit
+        import subprocess
+        import sys
+        def install(package):
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        install('myokit')
+        import myokit
 
     #
     # Time out handler
@@ -150,18 +157,68 @@ if args.myokit:
 
     class Model(pints.ForwardModel):
         """
-        # A voltage clamp (VC) model linking Myokit and Pints ForwardModel.
+        # A voltage clamp model linking Myokit and Pints ForwardModel.
         """
 
-        def __init__(self, model_file='ikr.mmt', max_evaluation_time=60):
+        def __init__(self, max_evaluation_time=60):
             """
-            # model_file: mmt model file for myokit; main units: mV, ms, pA.
             # max_evaluation_time: maximum time (in second) allowed for one
             #                      simulate() call.
             """
-            self._model = myokit.load_model(model_file)
-            self._model_file = model_file
-            self._model_file_name = os.path.basename(model_file)
+            self._model = myokit.parse_model('''
+            [[model]]
+            # Initial values
+            ikr.act = 0
+            ikr.rec = 1
+
+            # Simulation engine variables
+            [engine]
+            time = 0 [ms]
+                bind time
+
+            # Membrane potential
+            [membrane]
+            V = 0 [mV]
+                bind pace
+                label membrane_potential
+
+            [nernst]
+            EK = -86 [mV]
+
+            # Hodgkin-Huxley current model
+            [ikr]
+            use membrane.V
+            IKr = g * act * rec * (V - nernst.EK)
+                in [nA]
+            dot(act) = (inf - act) / tau
+                inf = k1 * tau
+                tau = 1 / (k1 + k2)
+                    in [ms]
+                k1 = p1 * exp(p2 * V)
+                    in [1/ms]
+                k2 = p3 * exp(-p4 * V)
+                    in [1/ms]
+            dot(rec) = (inf - rec) / tau
+                inf = k4 * tau
+                tau = 1 / (k3 + k4)
+                    in [ms]
+                k3 = p5 * exp(p6 * V)
+                    in [1/ms]
+                k4 = p7 * exp(-p8 * V)
+                    in [1/ms]
+            # https://github.com/CardiacModelling/hERGRapidCharacterisation/blob/master/room-temperature-only/out/herg25oc1/herg25oc1-staircaseramp-B06-solution-542811797.txt
+            p1 = 1.12592345582957387e-01 * 1e-3 [1/ms]
+            p2 = 8.26751134920666146e+01 * 1e-3 [1/mV]
+            p3 = 3.38768033864048357e-02 * 1e-3 [1/ms]
+            p4 = 4.67106147665183542e+01 * 1e-3 [1/mV]
+            # Best of 10 fits (M10) for data herg25oc1 cell B06 (seed 542811797)
+            p5 = 9.62243079990877703e+01 * 1e-3 [1/ms]
+            p6 = 2.26404683824047979e+01 * 1e-3 [1/mV]
+            p7 = 8.00924780462999131e+00 * 1e-3 [1/ms]
+            p8 = 2.43749808069009823e+01 * 1e-3 [1/mV]
+            p9 = 1 [uS]
+            g = p9
+            ''')
             self._vhold = -80
 
             # maximum time allowed
@@ -391,7 +448,6 @@ if args.debug:
     else:
         func = ODEFunc().to(device)
         model = Model(func)
-    # model.set_fixed_form_voltage_protocol(prediction_protocol[:, 0], prediction_protocol[:, 1])
     model.set_fixed_form_voltage_protocol(time1, voltage1)
     o = model.simulate(p0, time1)
     print(o.shape)
@@ -450,9 +506,8 @@ if __name__ == '__main__':
 
     # PINTS
     problem = pints.SingleOutputProblem(model, timet, datat)
-    #problem = pints.MultiOutputProblem(model, timet, datat)
     error = pints.SumOfSquaresError(problem)
-    print(error(p0))
+    print('Initial guess error:', error(p0))
     transform = pints.LogTransformation(n_parameters=problem.n_parameters())
 
     #"""
