@@ -840,7 +840,7 @@ if __name__ == '__main__':
 
     if True:
         func2 = ODEFunc().to(device)
-        func2.load_state_dict(torch.load('png-s1-3/model-state-dict.pt'))
+        func2.load_state_dict(torch.load('s1/model-state-dict.pt'))
         func2.eval()
         with torch.no_grad():
             p = func2.net(x_av.float()).to(device) / func2.netscale

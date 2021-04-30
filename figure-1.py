@@ -42,10 +42,6 @@ true_y0s = [torch.tensor([[1., 0.]]).to(device),  # what you get after holding a
 gt_true_y0s = [torch.tensor([[0., 0.]]).to(device),  # what you get after holding at +40mV
                torch.tensor([[0., 0.]]).to(device)]  # (roughly) what you get after holding at -80mV
 
-# B1.2 in https://physoc.onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1113%2FJP275733&file=tjp12905-sup-0001-textS1.pdf#page=4
-e = torch.tensor([-88.4]).to(device)  # assume we know
-g = torch.tensor([1]).to(device)  # assume we know
-
 #
 #
 #
@@ -129,7 +125,7 @@ class Lambda(nn.Module):
     def __init__(self):
         super(Lambda, self).__init__()
 
-        # Fit to GroundTruth model using ikr-disc0-rem.py, in `./png-d0-rem/model-parameters.txt`.
+        # Fit to GroundTruth model using train-d0.py, in `./d0/model-parameters.txt`.
         self.p1 = 5.694588454735844622e-05
         self.p2 = 1.172955815858964107e-01
         self.p3 = 3.522672347205991382e-05

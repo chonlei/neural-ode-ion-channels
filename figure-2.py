@@ -152,12 +152,7 @@ class Lambda(nn.Module):
     def __init__(self):
         super(Lambda, self).__init__()
 
-        # https://github.com/CardiacModelling/hERGRapidCharacterisation/blob/master/room-temperature-only/out/herg25oc1/herg25oc1-staircaseramp-B06-solution-542811797.txt
-        # self.p1 = 1.12592345582957387e-01 * 1e-3
-        # self.p2 = 8.26751134920666146e+01 * 1e-3
-        # self.p3 = 3.38768033864048357e-02 * 1e-3
-        # self.p4 = 4.67106147665183542e+01 * 1e-3
-        # Fit to GroundTruth model using ikr-disc0-rem.py, in `./png-d0-rem/model-parameters.txt`.
+        # Fit to GroundTruth model using train-d0.py, in `./d0/model-parameters.txt`.
         self.p1 = 5.694588454735844622e-05
         self.p2 = 1.172955815858964107e-01
         self.p3 = 3.522672347205991382e-05
