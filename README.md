@@ -1,14 +1,13 @@
-# Differential equations with neural networkterms for ion channel modelling
+# Differential equations with neural network terms for ion channel modelling
 
-Code associated with a [Frontiers of Physiology paper](.) by Chon Lok Lei and Gary R. Mirams.
+Source code associated with an [article in Frontiers of Physiology](.) by [Chon Lok Lei](https://chonlei.github.io/) and [Gary R. Mirams](https://www.maths.nottingham.ac.uk/plp/pmzgm/).
 
 
 Requirements
 ------
 
-To run the code within this repository requires
+To run the code within this repository requires [Python 3.5+](https://www.python.org/) with the following dependencies
 
-- [Python 3.5+](https://www.python.org/)
 - [`torchdiffeq`](https://github.com/rtqichen/torchdiffeq)
 - [`pints`](https://github.com/pints-team/pints)
 - [`seaborn`](https://seaborn.pydata.org)
