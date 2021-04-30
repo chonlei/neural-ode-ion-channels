@@ -68,3 +68,19 @@ To re-run and create the supplementary figures, use:
 - Figure S7: [`figure-1-s1.py`](./figure-1-s1.py)
 
 These generate figures in directories `figure-2-s`, `figure-3-s`, etc.
+
+
+Others
+------
+
+- `data`: Contains the experimental data from [Beattie et al. 2018](https://doi.org/10.1113/JP276068).
+- `model-structure`: Contains Markov diagrams/schematics for the models.
+- `test-protocols`: Contains time series files for various voltage-clamp protocols from [Beattie et al. 2018](https://doi.org/10.1113/JP276068) and [Lei et al. 2019a](https://doi.org/10.1016/j.bpj.2019.07.029) [& b](https://doi.org/10.1016/j.bpj.2019.07.030).
+
+
+Acknowledging this work
+------
+
+If you publish any work based on the contents of this repository please cite ([CITATION file](.)):
+
+[Place holder]
