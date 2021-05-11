@@ -431,9 +431,9 @@ i = 0
 for f in idxp3:
     #print(f, voltagep3[::ds3][i])
     if f in [602733,705957,809181,912405]:
-        color = 'C4'
+        color = 'C3'
     else:
-        color='#fdbb84'
+        color = 'C1'
     axes[1].plot(voltagep3[::ds3][i:f]+0.6, pred_a_1_pr5.reshape(-1).cpu().numpy()[::ds3][i:f], alpha=0.95, color=color, label='__nolegend__' if i!=0 else 'Pr5')
     axes[1].scatter(voltagep3[::ds3][i]+0.6, pred_a_1_pr5.reshape(-1).cpu().numpy()[::ds3][i], alpha=0.95, color=color, marker='.')
     axes[1].scatter(voltagep3[::ds3][f-1]+0.6, pred_a_1_pr5.reshape(-1).cpu().numpy()[::ds3][f-1], alpha=0.95, color=color, marker='.')
@@ -448,12 +448,12 @@ x2 = [-120, -100, -90, -80, -60, -40, -20, 0, 20]
 y3 = [0.967, 0.822, 0.822, 0.826, 0.833, 0.976]
 x3 = [-90, -80, -10, 0, 10, 20]
 
-axes[0].plot(x1, y1, '--', c='C3', alpha=0.5)
-axes[0].plot(x2, y2, '--', c='C3', alpha=0.5)
-axes[0].plot(x3, y3, '--', c='C3', alpha=0.5)
-axes[1].plot(x1, y1, '--', c='C3', alpha=0.25)
-axes[1].plot(x2, y2, '--', c='C3', alpha=0.25)
-axes[1].plot(x3, y3, '--', c='C3', alpha=0.25)
+axes[0].plot(x1, y1, '--', c='#7f7f7f', alpha=0.5)
+axes[0].plot(x2, y2, '--', c='#7f7f7f', alpha=0.5)
+axes[0].plot(x3, y3, '--', c='#7f7f7f', alpha=0.5)
+axes[1].plot(x1, y1, '--', c='#7f7f7f', alpha=0.25)
+axes[1].plot(x2, y2, '--', c='#7f7f7f', alpha=0.25)
+axes[1].plot(x3, y3, '--', c='#7f7f7f', alpha=0.25)
 
 axes[0].text(-0.1, 1.05, '(A)', size=12, weight='bold',
                 va='bottom', ha='right', transform=axes[0].transAxes)
