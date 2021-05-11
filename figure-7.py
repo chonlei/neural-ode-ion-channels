@@ -401,9 +401,6 @@ discont1[-1] = True  # include the last step
 idx1 = np.arange(len(voltage1[::ds]))[discont1]
 i = 0
 for f in idx1:
-    #axes[0].plot(voltage1[::ds][i:f], (current1/pred_d_1_pr3.reshape(-1).cpu().numpy())[::ds][i:f], alpha=0.95, color='#bcbddc', label='__nolegend__' if i!=0 else 'Pr3')
-    #axes[0].scatter(voltage1[::ds][i], (current1/pred_d_1_pr3.reshape(-1).cpu().numpy())[::ds][i], alpha=0.95, color='#bcbddc', marker='.')
-    #axes[0].scatter(voltage1[::ds][f-1], (current1/pred_d_1_pr3.reshape(-1).cpu().numpy())[::ds][f-1], alpha=0.95, color='#bcbddc', marker='.')
     axes[0].plot(voltage1[::ds][i:f]-0.6, pred_a_1_pr3.reshape(-1).cpu().numpy()[::ds][i:f], alpha=0.95, color='#bcbddc', label='__nolegend__' if i!=0 else 'Pr3')
     axes[0].scatter(voltage1[::ds][i]-0.6, pred_a_1_pr3.reshape(-1).cpu().numpy()[::ds][i], alpha=0.95, color='#bcbddc', marker='.')
     axes[0].scatter(voltage1[::ds][f-1]-0.6, pred_a_1_pr3.reshape(-1).cpu().numpy()[::ds][f-1], alpha=0.95, color='#bcbddc', marker='.')
@@ -418,9 +415,6 @@ discont2[-1] = True  # include the last step
 idx2 = np.arange(len(voltage2[::ds2]))[discont2]
 i = 0
 for f in idx2:
-    #axes[0].plot(voltage2[::ds2][i:f], (current2/pred_d_1_pr4.reshape(-1).cpu().numpy())[::ds2][i:f], alpha=0.95, color='#bcbddc', label='__nolegend__' if i!=0 else 'Pr4')
-    #axes[0].scatter(voltage2[::ds2][i], (current2/pred_d_1_pr4.reshape(-1).cpu().numpy())[::ds2][i], alpha=0.95, color='#bcbddc', marker='.')
-    #axes[0].scatter(voltage2[::ds2][f-1], (current2/pred_d_1_pr4.reshape(-1).cpu().numpy())[::ds2][f-1], alpha=0.95, color='#bcbddc', marker='.')
     axes[0].plot(voltage2[::ds2][i:f]-0.6, pred_a_1_pr4.reshape(-1).cpu().numpy()[::ds2][i:f], alpha=0.95, color='#bcbddc', label='__nolegend__' if i!=0 else 'Pr4')
     axes[0].scatter(voltage2[::ds2][i]-0.6, pred_a_1_pr4.reshape(-1).cpu().numpy()[::ds2][i], alpha=0.95, color='#bcbddc', marker='.')
     axes[0].scatter(voltage2[::ds2][f-1]-0.6, pred_a_1_pr4.reshape(-1).cpu().numpy()[::ds2][f-1], alpha=0.95, color='#bcbddc', marker='.')
@@ -435,12 +429,14 @@ discontp3[-1] = True  # include the last step
 idxp3 = np.arange(len(voltagep3[::ds3]))[discontp3]
 i = 0
 for f in idxp3:
-    #axes[1].plot(voltagep3[::ds3][i:f], (currentp3/pred_d_1_pr5.reshape(-1).cpu().numpy())[::ds3][i:f], alpha=0.95, color='#fdbb84', label='__nolegend__' if i!=0 else 'Pr4')
-    #axes[1].scatter(voltagep3[::ds3][i], (currentp3/pred_d_1_pr5.reshape(-1).cpu().numpy())[::ds3][i], alpha=0.95, color='#fdbb84', marker='.')
-    #axes[1].scatter(voltagep3[::ds3][f-1], (currentp3/pred_d_1_pr5.reshape(-1).cpu().numpy())[::ds3][f-1], alpha=0.95, color='#fdbb84', marker='.')
-    axes[1].plot(voltagep3[::ds3][i:f]+0.6, pred_a_1_pr5.reshape(-1).cpu().numpy()[::ds3][i:f], alpha=0.95, color='#fdbb84', label='__nolegend__' if i!=0 else 'Pr4')
-    axes[1].scatter(voltagep3[::ds3][i]+0.6, pred_a_1_pr5.reshape(-1).cpu().numpy()[::ds3][i], alpha=0.95, color='#fdbb84', marker='.')
-    axes[1].scatter(voltagep3[::ds3][f-1]+0.6, pred_a_1_pr5.reshape(-1).cpu().numpy()[::ds3][f-1], alpha=0.95, color='#fdbb84', marker='.')
+    #print(f, voltagep3[::ds3][i])
+    if f in [602733,705957,809181,912405]:
+        color = 'C4'
+    else:
+        color='#fdbb84'
+    axes[1].plot(voltagep3[::ds3][i:f]+0.6, pred_a_1_pr5.reshape(-1).cpu().numpy()[::ds3][i:f], alpha=0.95, color=color, label='__nolegend__' if i!=0 else 'Pr5')
+    axes[1].scatter(voltagep3[::ds3][i]+0.6, pred_a_1_pr5.reshape(-1).cpu().numpy()[::ds3][i], alpha=0.95, color=color, marker='.')
+    axes[1].scatter(voltagep3[::ds3][f-1]+0.6, pred_a_1_pr5.reshape(-1).cpu().numpy()[::ds3][f-1], alpha=0.95, color=color, marker='.')
     i = f
 
 y1 = [0, 0.354, 0.549, 0.677, 0.75, 0.789, 0.807, 0.816, 0.82, 0.823, 0.8235, 0.8235, 0.8235, 0.8235]
@@ -455,9 +451,9 @@ x3 = [-90, -80, -10, 0, 10, 20]
 axes[0].plot(x1, y1, '--', c='C3', alpha=0.5)
 axes[0].plot(x2, y2, '--', c='C3', alpha=0.5)
 axes[0].plot(x3, y3, '--', c='C3', alpha=0.5)
-axes[1].plot(x1, y1, '--', c='C3', alpha=0.5)
-axes[1].plot(x2, y2, '--', c='C3', alpha=0.5)
-axes[1].plot(x3, y3, '--', c='C3', alpha=0.5)
+axes[1].plot(x1, y1, '--', c='C3', alpha=0.25)
+axes[1].plot(x2, y2, '--', c='C3', alpha=0.25)
+axes[1].plot(x3, y3, '--', c='C3', alpha=0.25)
 
 axes[0].text(-0.1, 1.05, '(A)', size=12, weight='bold',
                 va='bottom', ha='right', transform=axes[0].transAxes)

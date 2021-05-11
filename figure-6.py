@@ -456,12 +456,25 @@ axes[1, 1].set_xlim([0, 2000])
 
 
 l = int(len(timep3) / 9)  # 9 steps
-for i in range(9)[::2]:
-    axes[2, 0].plot(timep3[:l], voltagep3[l*i:l*(i+1)], c='#7f7f7f', ds='steps')
+for i in range(9)[::]:
+    if i < 5:
+        axes[2, 0].plot(timep3[:l], voltagep3[l*i:l*(i+1)], c='#7f7f7f', ds='steps')
 
-    axes[3, 0].plot(timep3[:l:ds], currentp3.reshape(-1)[l*i:l*(i+1):ds], c='#7f7f7f')
-    axes[3, 0].plot(timep3[:l:ds], pred_y_o_pr5.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C0')
-    axes[3, 0].plot(timep3[:l:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C3')
+        axes[3, 0].plot(timep3[:l:ds], currentp3.reshape(-1)[l*i:l*(i+1):ds], c='#7f7f7f')
+        axes[3, 0].plot(timep3[:l:ds], pred_y_o_pr5.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C0')
+        axes[3, 0].plot(timep3[:l:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C3')
+    else:
+        i1 = 26613
+        i2 = 60000 + i1
+        axes[2, 0].plot(timep3[:i1], voltagep3[l*i:l*i+i1], c='#7f7f7f', ds='steps')
+        axes[2, 0].plot(timep3[i1-1:i2], voltagep3[l*i+i1-1:l*i+i2], c='C4', ds='steps')
+        axes[2, 0].plot(timep3[i2-1:l], voltagep3[l*i+i2-1:l*(i+1)], c='#7f7f7f', ds='steps')
+
+        axes[3, 0].plot(timep3[:l:ds], currentp3.reshape(-1)[l*i:l*(i+1):ds], c='#7f7f7f')
+        axes[3, 0].plot(timep3[:l:ds], pred_y_o_pr5.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C0')
+        axes[3, 0].plot(timep3[:i1:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i:l*i+i1:ds], '--', c='C3')
+        axes[3, 0].plot(timep3[i1-1:i2:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i+i1-1:l*i+i2:ds], '--', c='C4')
+        axes[3, 0].plot(timep3[i2-1:l:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i+i2-1:l*(i+1):ds], '--', c='C3')
 
 axes[2, 0].set_xlim([timep3[:l:ds][0], timep3[:l:ds][-1]])
 axes[3, 0].set_xlim([timep3[:l:ds][0], timep3[:l:ds][-1]])
