@@ -436,7 +436,7 @@ for i in range(7)[::2]:
     axes[1, 0].plot(time1[:l:ds], current1.reshape(-1)[l*i:l*(i+1):ds], c='#7f7f7f', label='__nolegend__' if i else 'Data')
     axes[1, 0].plot(time1[:l:ds], pred_y_o_pr3.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C0',
                     label='__nolegend__' if i else r"'Improperly' trained candidate model")
-    axes[1, 0].plot(time1[:l:ds], pred_y_1_pr3.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C1',
+    axes[1, 0].plot(time1[:l:ds], pred_y_1_pr3.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='#deb466',
                     label='__nolegend__' if i else r"'Improperly' trained $a$-gate as NN (NN-f)")
 
 axes[0, 0].set_xlim([0, 7500])
@@ -449,7 +449,7 @@ for i in range(16)[::2]:
 
     axes[1, 1].plot(time2[:l:ds], current2.reshape(-1)[l*i:l*(i+1):ds], c='#7f7f7f')
     axes[1, 1].plot(time2[:l:ds], pred_y_o_pr4.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C0')
-    axes[1, 1].plot(time2[:l:ds], pred_y_1_pr4.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C1')
+    axes[1, 1].plot(time2[:l:ds], pred_y_1_pr4.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='#deb466')
 
 axes[0, 1].set_xlim([0, 2000])
 axes[1, 1].set_xlim([0, 2000])
@@ -462,19 +462,19 @@ for i in range(9)[::]:
 
         axes[3, 0].plot(timep3[:l:ds], currentp3.reshape(-1)[l*i:l*(i+1):ds], c='#7f7f7f')
         axes[3, 0].plot(timep3[:l:ds], pred_y_o_pr5.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C0')
-        axes[3, 0].plot(timep3[:l:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C1')
+        axes[3, 0].plot(timep3[:l:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='#deb466')
     else:
         i1 = 26613
         i2 = 60000 + i1
         axes[2, 0].plot(timep3[:i1], voltagep3[l*i:l*i+i1], c='#7f7f7f', ds='steps')
-        axes[2, 0].plot(timep3[i1-1:i2], voltagep3[l*i+i1-1:l*i+i2], c='C3', ds='steps')
+        axes[2, 0].plot(timep3[i1:i2], voltagep3[l*i+i1:l*i+i2], c='C3', ds='steps')
         axes[2, 0].plot(timep3[i2-1:l], voltagep3[l*i+i2-1:l*(i+1)], c='#7f7f7f', ds='steps')
 
         axes[3, 0].plot(timep3[:l:ds], currentp3.reshape(-1)[l*i:l*(i+1):ds], c='#7f7f7f')
         axes[3, 0].plot(timep3[:l:ds], pred_y_o_pr5.reshape(-1).cpu().numpy()[l*i:l*(i+1):ds], '--', c='C0')
-        axes[3, 0].plot(timep3[:i1:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i:l*i+i1:ds], '--', c='C1')
+        axes[3, 0].plot(timep3[:i1:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i:l*i+i1:ds], '--', c='#deb466')
         axes[3, 0].plot(timep3[i1-1:i2:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i+i1-1:l*i+i2:ds], '--', c='C3')
-        axes[3, 0].plot(timep3[i2-1:l:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i+i2-1:l*(i+1):ds], '--', c='C1')
+        axes[3, 0].plot(timep3[i2-1:l:ds], pred_y_1_pr5.reshape(-1).cpu().numpy()[l*i+i2-1:l*(i+1):ds], '--', c='#deb466')
 
 axes[2, 0].set_xlim([timep3[:l:ds][0], timep3[:l:ds][-1]])
 axes[3, 0].set_xlim([timep3[:l:ds][0], timep3[:l:ds][-1]])
