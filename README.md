@@ -1,4 +1,4 @@
-# Differential equations with neural network terms for ion channel modelling
+# Neural network differential equations for ion channel modelling
 
 Source code associated with an [article in Frontiers of Physiology](.) by [Chon Lok Lei](https://chonlei.github.io/) and [Gary R. Mirams](https://www.maths.nottingham.ac.uk/plp/pmzgm/).
 
