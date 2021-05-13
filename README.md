@@ -55,7 +55,8 @@ To re-run and create the main figures, use:
 - Figure 4: [`figure-3.py`](./figure-3.py)
 - Figure 5: [`figure-4.py`](./figure-4.py)
 - Figure 6: [`figure-5.py`](./figure-5.py)
-- Figure 7: [`figure-6.py`](./figure-6.py).
+- Figure 7: [`figure-6.py`](./figure-6.py)
+- Figure 8: [`figure-7.py`](./figure-7.py).
 
 These generate figures in directories `figure-1`, `figure-2`, etc.
 
