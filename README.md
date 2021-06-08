@@ -46,10 +46,10 @@ The following codes re-run the training for the models.
 Their trained results are stored in directories `s1`, `s2`, `d1`, etc.
 
 
-Main figures
+Main figures and tables
 ------
 
-To re-run and create the main figures, use:
+To re-run and create the main figures and tables, use:
 - Figure 2: [`figure-1.py`](./figure-1.py)
 - Figure 3: [`figure-2.py`](./figure-2.py)
 - Figure 4: [`figure-3.py`](./figure-3.py)
@@ -57,6 +57,7 @@ To re-run and create the main figures, use:
 - Figure 6: [`figure-5.py`](./figure-5.py)
 - Figure 7: [`figure-6.py`](./figure-6.py)
 - Figure 8: [`figure-7.py`](./figure-7.py).
+- Table 1: [`table-1.py`](./table-1.py).
 
 These generate figures in directories `figure-1`, `figure-2`, etc.
 
