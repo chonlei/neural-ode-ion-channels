@@ -58,6 +58,7 @@ To re-run and create the main figures and tables, use:
 - Figure 7: [`figure-6.py`](./figure-6.py)
 - Figure 8: [`figure-7.py`](./figure-7.py).
 - Table 1: [`table-1.py`](./table-1.py).
+- Table 2: [`table-2.py`](./table-2.py).
 
 These generate figures in directories `figure-1`, `figure-2`, etc.
 
