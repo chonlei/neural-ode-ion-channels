@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 import torch
 import torch.nn as nn
 
-parser = argparse.ArgumentParser('IKr NN ODE real data table')
+parser = argparse.ArgumentParser('IKr NN ODE real data error table')
 parser.add_argument('--method', type=str, choices=['dopri5', 'adams'], default='dopri5')
 parser.add_argument('--cached', action='store_true')
 args = parser.parse_args()
@@ -453,7 +453,8 @@ else:
 
 
 def loss(x, y):
-    return torch.sqrt(torch.mean(torch.square(x - y))).item()
+    # return torch.sqrt(torch.mean(torch.square(x - y))).item()
+    return torch.mean(torch.abs(x - y)).item()
 
 training_pr3_y_o = loss(pred_y_o_pr3, current1)
 training_pr3_y_1 = loss(pred_y_1_pr3, current1)
