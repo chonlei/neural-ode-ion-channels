@@ -1,6 +1,6 @@
 # Neural network differential equations for ion channel modelling
 
-Source code associated with an [article in Frontiers of Physiology](.) by [Chon Lok Lei](https://chonlei.github.io/) and [Gary R. Mirams](https://www.maths.nottingham.ac.uk/plp/pmzgm/).
+Source code associated with an [article in Frontiers of Physiology](https://www.frontiersin.org/articles/10.3389/fphys.2021.708944) by [Chon Lok Lei](https://chonlei.github.io/) and [Gary R. Mirams](https://www.maths.nottingham.ac.uk/plp/pmzgm/).
 
 ![Model structures used in this repository](https://raw.githubusercontent.com/chonlei/neural-ode-ion-channels/main/model-structure/model-structure-2.svg?token=AGL42DUH3JXYLYLGOWOKL23AUXFOK)
 
@@ -91,4 +91,8 @@ Acknowledging this work
 
 If you publish any work based on the contents of this repository please cite ([CITATION file](.)):
 
-[Place holder]
+Lei, C. L. and Mirams, G. R.
+(2021).
+Neural network differential equations for ion channel modelling.
+_Frontiers in Physiology_.
+[doi:10.3389/fphys.2021.708944](https://doi.org/10.3389/fphys.2021.708944).
