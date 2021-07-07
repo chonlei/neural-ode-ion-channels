@@ -1,0 +1,10 @@
+{@{}XXXcXXX@{}}
+\toprule
+         & \multicolumn{2}{c}{Training} & \phantom{a} & \multicolumn{3}{c}{Prediction} \\
+           \cmidrule{2-3}                               \cmidrule{5-7}
+         & Pr3 & Pr5 & & Pr4 & Sinusoidal & APs \\
+\midrule
+Original & 0.144 & 0.166 & & 0.388 & 0.695 & 0.463 \\
+NN-f     & 0.113 & 0.11 & & 0.167 & 0.453 & 0.299 \\
+NN-d     & 0.146 & 0.128 & & 0.165 & 0.507 & 0.294 \\
+\bottomrule

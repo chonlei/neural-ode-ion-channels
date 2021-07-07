@@ -1,4 +1,3 @@
-torchdiffeq
-pints
-seaborn
-myokit
+torchdiffeq==0.2.1
+pints==0.4.0
+seaborn=0.11.1
