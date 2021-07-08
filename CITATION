@@ -1,0 +1,24 @@
+To cite this repository or the article in publications, please use:
+
+Lei, C.L. and Mirams, G.R.
+(2021).
+Neural network differential equations for ion channel modelling.
+Frontiers in Physiology.
+doi:10.3389/fphys.2021.708944.
+
+https://doi.org/10.3389/fphys.2021.708944
+
+A BibTeX entry for LaTeX users is
+
+@article{Lei2021Neural,
+  author = {Lei, Chon Lok  and Mirams, Gary R. },
+  title = {Neural network differential equations for ion channel modelling},
+  journal = {Frontiers in Physiology},
+  volume = {},
+  number = {},
+  pages = {},
+  year = {2021},
+  doi = {10.3389/fphys.2021.708944},
+  URL = {https://www.frontiersin.org/articles/10.3389/fphys.2021.708944},
+  eprint = {https://www.frontiersin.org/articles/10.3389/fphys.2021.708944}
+}

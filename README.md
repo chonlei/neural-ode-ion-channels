@@ -89,7 +89,7 @@ Others
 Acknowledging this work
 ------
 
-If you publish any work based on the contents of this repository please cite ([CITATION file](.)):
+If you publish any work based on the contents of this repository please cite ([CITATION file](./CITATION)):
 
 Lei, C. L. and Mirams, G. R.
 (2021).
