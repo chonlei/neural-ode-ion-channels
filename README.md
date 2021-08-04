@@ -96,5 +96,5 @@ If you publish any work based on the contents of this repository please cite ([C
 Lei, C. L. and Mirams, G. R.
 (2021).
 Neural network differential equations for ion channel modelling.
-_Frontiers in Physiology_.
+_Frontiers in Physiology_, 12, 1166.
 [doi:10.3389/fphys.2021.708944](https://doi.org/10.3389/fphys.2021.708944).
